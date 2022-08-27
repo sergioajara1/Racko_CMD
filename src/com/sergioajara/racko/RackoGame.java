@@ -76,7 +76,7 @@ public class RackoGame {
 
         do {
             theGame.takeTurns();
-        }while(theGame.getKillSignal());
+        }while(theGame.getKillSignal() == false);
 
         //Ask if player would like to play again... if so then reset variables and players
     }

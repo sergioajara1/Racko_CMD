@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 public class Racko {
@@ -29,6 +30,9 @@ public class Racko {
         roundNum = 0;
     }
 
+    /**
+     * @return endGame - activate the kill signal if it's the end of the game
+     */
     public boolean getKillSignal() {
         return endGame;
     }
@@ -38,26 +42,20 @@ public class Racko {
      */
     public void start() {
         theDeck.shuffle();
-
-        //Deal 1 card to each player and check for the highest card.
-        for(int x = 0; x < 1; x++) {
-            for(RackoPlayer currPlayer: thePlayers) {
-                currPlayer.addCard(theDeck.draw());
-            }
-        }
-        //Choosing the dealer by checking for the highest card.
-        theDealer = thePlayers.get(0);
-        for(RackoPlayer currPlayer : thePlayers) {
-            if(theDealer != currPlayer && currPlayer.getRack().getPosition5().getFaceValue() > theDealer.getRack().getPosition5().getFaceValue()) {
-                theDealer = currPlayer;
-            }
-        }
-        //Returning cards and shuffling.
-        for(RackoPlayer currPlayer : thePlayers) {
-            theDeck.add(currPlayer.getRack().removePosition5());
-        }
+        chooseDealer();
         theDeck.shuffle();
+        dealCards();
 
+        //Setting up the discard pile
+        setupTheTrash();
+        //Check the draw pile for face up cards... dealer messes up sometimes
+        organizeTheDeck();
+    }
+
+    /**
+     * Deals 10 cards to all the players. Starts by using the Dealer's position and deals according to that position.
+     */
+    private void dealCards() {
         //Deal 10 cards to each player
         int dealerIndex = thePlayers.indexOf(theDealer);
         for(int x = 0; x < 10; x++) {
@@ -72,12 +70,37 @@ public class Racko {
             }
             dealerIndex = thePlayers.indexOf(theDealer);
         }
+    }
 
-
-        //Setting up the discard pile
-        theTrash.discardCard(theDeck.draw());
-        //Check the draw pile for face up cards... dealer messes up sometimes
-        organizeTheDeck();
+    /**
+     * Picks a dealer based on the game's round number.
+     */
+    private void chooseDealer() {
+        if(roundNum == 0) {
+            //Deal 1 card to each player and check for the highest card.
+            for (int x = 0; x < 1; x++) {
+                for (RackoPlayer currPlayer : thePlayers) {
+                    currPlayer.addCard(theDeck.draw());
+                }
+            }
+            //Choosing the dealer by checking for the highest card.
+            theDealer = thePlayers.get(0);
+            for (RackoPlayer currPlayer : thePlayers) {
+                if (theDealer != currPlayer && currPlayer.getRack().getPosition5().getFaceValue() > theDealer.getRack().getPosition5().getFaceValue()) {
+                    theDealer = currPlayer;
+                }
+            }
+            //Returning cards and shuffling.
+            for (RackoPlayer currPlayer : thePlayers) {
+                theDeck.add(currPlayer.getRack().removePosition5());
+            }
+        }
+        else {
+             int idxOfDealer = thePlayers.indexOf(theDealer);
+             if(idxOfDealer == thePlayers.size() - 1)
+                 idxOfDealer = -1;
+             theDealer = thePlayers.get(idxOfDealer+1);
+        }
     }
 
     /**
@@ -89,9 +112,18 @@ public class Racko {
         }
     }
 
+    /**
+     * Takes turns between all players.
+     * Checks for RackO to end the round and scores players.
+     */
     public void takeTurns() {
+        if(endRound) {
+            resetRound();
+        }
+
         int dealerIndex = thePlayers.indexOf(theDealer);
         dealerIndex = (dealerIndex == thePlayers.size() - 1 ? -1 : dealerIndex);
+
         for (dealerIndex += 1; dealerIndex <= thePlayers.size(); dealerIndex++) {
             RackoPlayer currPlayer;
             try {
@@ -131,6 +163,50 @@ public class Racko {
         }
     }
 
+    /**
+     * Resets the round variables, updates the dealer and sets up all the cards for a new round.
+     */
+    private void resetRound() {
+        endRound = false;
+        chooseDealer();
+        cleanUpCards();
+        dealCards();
+        setupTheTrash();
+        organizeTheDeck();
+    }
+
+    /**
+     * Sets up theTrash by drawing from theDeck.
+     */
+    private void setupTheTrash() {
+        theTrash.discardCard(theDeck.draw());
+    }
+
+    /**
+     * Cleans up all the cards on the field by adding them into theDeck then it organizes and shuffles the deck.
+     */
+    private void cleanUpCards() {
+        for(RackoPlayer thePlayer : thePlayers) {
+            Iterator<RackoCard> itr = thePlayer.getRack().iterator();
+            while(itr.hasNext()) {
+                RackoCard theCard = itr.next();
+                theDeck.add(theCard);
+                itr.remove();
+            }
+        }
+        Iterator<RackoCard> itr = theTrash.iterator();
+        while(itr.hasNext()) {
+            RackoCard theCard = itr.next();
+            theDeck.add(theCard);
+            itr.remove();
+        }
+        organizeTheDeck();
+        theDeck.shuffle();
+    }
+
+    /**
+     * Prints out the end of the game screen.
+     */
     private void printEndGameScreen() {
         System.out.println("********************************************************************************");
         System.out.println("********************************************************************************");
@@ -140,8 +216,15 @@ public class Racko {
         System.out.println("**                                 Rounds Won: " + theWinner.getRoundsWon() + " of " + roundNum);
         System.out.println("********************************************************************************");
         System.out.println("********************************************************************************");
+        try {
+            TimeUnit.SECONDS.sleep(30);
+        }
+        catch(Exception e) {}
     }
 
+    /**
+     * Checks the players to see if they've reached the end of the game based on points.
+     */
     private void checkForEndGame() {
         for(RackoPlayer thePlayer : thePlayers) {
             if(thePlayer.getScore() >= 500 && endGame == false) {
@@ -155,22 +238,33 @@ public class Racko {
         }
     }
 
+    /**
+     * Ends the round and activates flags and updates roundNum and roundsWon.
+     * @param currPlayer - the winner of the round.
+     */
     private void endRound(RackoPlayer currPlayer) {
         endRound = true;
         roundNum++;
         theWinner = currPlayer;
         theWinner.updateRoundsWon();
-
     }
 
+    /**
+     * Scores the players.
+     * ToDo: Bonus points not implemented yet
+     */
     private void scorePlayers() {
         for(RackoPlayer thePlayer : thePlayers) {
             int winningCards = 1;
             for(int i = 0; i < thePlayer.getRack().size(); i++) {
-                if(thePlayer.getRack().get(i+1) != null && thePlayer.getRack().get(i).getFaceValue() < thePlayer.getRack().get(i+1).getFaceValue()) {
-                    winningCards++;
+                try {
+                    if (thePlayer.getRack().get(i + 1) != null && thePlayer.getRack().get(i).getFaceValue() < thePlayer.getRack().get(i + 1).getFaceValue()) {
+                        winningCards++;
+                    } else {
+                        break;
+                    }
                 }
-                else {
+                catch (IndexOutOfBoundsException e) {
                     break;
                 }
             }
@@ -181,6 +275,9 @@ public class Racko {
         }
     }
 
+    /**
+     * Prints the end of the Round Screen and waits.
+     */
     private void printEndRoundScreen() {
         System.out.println("********************************************************************************");
         System.out.println("*                                 WINNER of Round " + roundNum);
@@ -188,8 +285,16 @@ public class Racko {
         System.out.println("*                                 Score: " + theWinner.getScore());
         System.out.println("*                                 Rounds Won: " + theWinner.getRoundsWon());
         System.out.println("********************************************************************************");
+        try {
+            TimeUnit.SECONDS.sleep(15);
+        }
+        catch(Exception e) {}
     }
 
+    /**
+     * Takes a turn for the currPlayer.
+     * @param currPlayer - The player taking a turn.
+     */
     private void takeTurn(RackoPlayer currPlayer) {
         System.out.println(theDeck.toString());
         System.out.println(theTrash.toString());
@@ -343,8 +448,13 @@ public class Racko {
      */
     private boolean checkForRacko(RackoPlayer currPlayer) {
         for(int x = 0; x < currPlayer.getRack().size(); x++) {
-            if (currPlayer.getRack().get(x+1) != null && currPlayer.getRack().get(x).getFaceValue() > currPlayer.getRack().get(x + 1).getFaceValue())
-                return false;
+            try {
+                if (currPlayer.getRack().get(x + 1) != null && currPlayer.getRack().get(x).getFaceValue() > currPlayer.getRack().get(x + 1).getFaceValue())
+                    return false;
+            }
+            catch(IndexOutOfBoundsException iOBE) {
+                //DO NOTHING
+            }
         }
         return true;
     }
