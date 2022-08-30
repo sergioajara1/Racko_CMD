@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class RackoGame {
 
@@ -71,10 +72,15 @@ public class RackoGame {
 
         theGame = new Racko(setupPlayers(reader));
 
+        System.out.println("================================================================================");
         System.out.println("Starting the game, shuffling and distributing cards...");
-        theGame.start();
+        try {
+            TimeUnit.SECONDS.sleep(4);
+        }
+        catch(Exception ignored) {}
 
         do {
+            theGame.setupGame();
             theGame.takeTurns();
         }while(theGame.getKillSignal() == false);
 

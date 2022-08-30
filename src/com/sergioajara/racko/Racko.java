@@ -117,9 +117,12 @@ public class Racko {
      * Checks for RackO to end the round and scores players.
      */
     public void takeTurns() {
-        if(endRound) {
-            resetRound();
-        }
+        //If we got here with an endGame and endRound active return and kill the game.
+        if(endGame && endRound)
+            return;
+
+        System.out.println("================================================================================");
+        System.out.println("                            Starting Round " + (roundNum + 1));
 
         int dealerIndex = thePlayers.indexOf(theDealer);
         dealerIndex = (dealerIndex == thePlayers.size() - 1 ? -1 : dealerIndex);
@@ -134,13 +137,14 @@ public class Racko {
                 try {
                     TimeUnit.SECONDS.sleep(2);
                 }
-                catch(Exception e) {}
+                catch(Exception ignored) {}
+
                 if(checkForRacko(currPlayer))
                     endRound(currPlayer);
                 else
                     takeTurn(currPlayer);
 
-                if(checkForRacko(currPlayer) && endRound != true)
+                if(checkForRacko(currPlayer) && !endRound)
                     endRound(currPlayer);
 
                 if(endRound)
@@ -156,8 +160,9 @@ public class Racko {
         if(endRound) {
             scorePlayers();
             checkForEndGame();
-            if(endGame)
+            if(endGame){
                 printEndGameScreen();
+            }
             else
                 printEndRoundScreen();
         }
@@ -219,7 +224,7 @@ public class Racko {
         try {
             TimeUnit.SECONDS.sleep(30);
         }
-        catch(Exception e) {}
+        catch(Exception ignored) {}
     }
 
     /**
@@ -227,7 +232,7 @@ public class Racko {
      */
     private void checkForEndGame() {
         for(RackoPlayer thePlayer : thePlayers) {
-            if(thePlayer.getScore() >= 500 && endGame == false) {
+            if(thePlayer.getScore() >= 500 && !endGame) {
                 endGame = true;
                 theWinner = thePlayer;
             }
@@ -288,7 +293,7 @@ public class Racko {
         try {
             TimeUnit.SECONDS.sleep(15);
         }
-        catch(Exception e) {}
+        catch(Exception ignored) {}
     }
 
     /**
@@ -296,6 +301,9 @@ public class Racko {
      * @param currPlayer - The player taking a turn.
      */
     private void takeTurn(RackoPlayer currPlayer) {
+        //Check if the deck is empty before taking a turn. If it is reset the deck and discard pile.
+        checkDecks();
+
         System.out.println(theDeck.toString());
         System.out.println(theTrash.toString());
         System.out.println("[1] Draw from Draw Pile");
@@ -309,7 +317,7 @@ public class Racko {
             try {
                 TimeUnit.SECONDS.sleep(2);
             }
-            catch(Exception e) {}
+            catch(Exception ignored) {}
             drawnCard = theDeck.draw();
             drawnCard.setFaceDown(false);
         }
@@ -318,46 +326,40 @@ public class Racko {
             try {
                 TimeUnit.SECONDS.sleep(2);
             }
-            catch(Exception e) {}
+            catch(Exception ignored) {}
             drawnCard = theTrash.draw();
         }
 
         System.out.println("Which position do you want to put the drawn card into? Drawn Card: " + drawnCard.toString());
         playerTurnOpts = getDrawOption(reader, currPlayer, drawnCard, playerTurnOpts);
-        switch(playerTurnOpts.getDrawnOption()) {
-            case 1:
-                theTrash.discardCard(currPlayer.updateRack(0, drawnCard));
-                break;
-            case 2:
-                theTrash.discardCard(currPlayer.updateRack(1, drawnCard));
-                break;
-            case 3:
-                theTrash.discardCard(currPlayer.updateRack(2, drawnCard));
-                break;
-            case 4:
-                theTrash.discardCard(currPlayer.updateRack(3, drawnCard));
-                break;
-            case 5:
-                theTrash.discardCard(currPlayer.updateRack(4, drawnCard));
-                break;
-            case 6:
-                theTrash.discardCard(currPlayer.updateRack(5, drawnCard));
-                break;
-            case 7:
-                theTrash.discardCard(currPlayer.updateRack(6, drawnCard));
-                break;
-            case 8:
-                theTrash.discardCard(currPlayer.updateRack(7, drawnCard));
-                break;
-            case 9:
-                theTrash.discardCard(currPlayer.updateRack(8, drawnCard));
-                break;
-            case 10:
-                theTrash.discardCard(currPlayer.updateRack(9, drawnCard));
-                break;
-            case 11:
-                theTrash.discardCard(drawnCard);
-                break;
+        switch (playerTurnOpts.getDrawnOption()) {
+            case 1 -> theTrash.discardCard(currPlayer.updateRack(0, drawnCard));
+            case 2 -> theTrash.discardCard(currPlayer.updateRack(1, drawnCard));
+            case 3 -> theTrash.discardCard(currPlayer.updateRack(2, drawnCard));
+            case 4 -> theTrash.discardCard(currPlayer.updateRack(3, drawnCard));
+            case 5 -> theTrash.discardCard(currPlayer.updateRack(4, drawnCard));
+            case 6 -> theTrash.discardCard(currPlayer.updateRack(5, drawnCard));
+            case 7 -> theTrash.discardCard(currPlayer.updateRack(6, drawnCard));
+            case 8 -> theTrash.discardCard(currPlayer.updateRack(7, drawnCard));
+            case 9 -> theTrash.discardCard(currPlayer.updateRack(8, drawnCard));
+            case 10 -> theTrash.discardCard(currPlayer.updateRack(9, drawnCard));
+            case 11 -> theTrash.discardCard(drawnCard);
+        }
+    }
+
+    /**
+     * Check the decks and reset them if theDeck is empty. Otherwise, do nothing.
+     */
+    private void checkDecks() {
+        if(theDeck.isEmpty()) {
+            Iterator<RackoCard> itr = theTrash.iterator();
+            while(itr.hasNext()) {
+                RackoCard theCard = itr.next();
+                theDeck.add(theCard);
+                itr.remove();
+            }
+            organizeTheDeck();
+            setupTheTrash();
         }
     }
 
@@ -368,7 +370,7 @@ public class Racko {
         String turnOption = "0";
         PlayerOptions botPlayerOptions = null;
         try {
-            while (Integer.valueOf(turnOption) < 1 || Integer.valueOf(turnOption) > 2) {
+            while (Integer.parseInt(turnOption) < 1 || Integer.parseInt(turnOption) > 2) {
                 System.out.print("Choose your option [1/2]: ");
                 if(thePlayer.getBot() != null) {
                     botPlayerOptions = thePlayer.getBot(new RackoInfo(this, thePlayer)).getOptions(null,null);
@@ -376,7 +378,7 @@ public class Racko {
                     try {
                         TimeUnit.SECONDS.sleep(2);
                     }
-                    catch(Exception e) {}
+                    catch(Exception ignored) {}
                     turnOption = String.valueOf(botPlayerOptions.getTurnOption().equals(TurnOption.DRAW) ? 1 : 2);
                 }
                 else {
@@ -409,7 +411,7 @@ public class Racko {
         String turnOption = "0";
         System.out.println("Player Rack: " + thePlayer.getRack().toString());
         try {
-            while (Integer.valueOf(turnOption) < 1 || Integer.valueOf(turnOption) > 11) {
+            while (Integer.parseInt(turnOption) < 1 || Integer.parseInt(turnOption) > 11) {
                 if(playerOpts.getTurnOption().equals(TurnOption.DRAW))
                     System.out.print("Choose your option [1-10 or 11 For Discard]: ");
                 else
@@ -420,12 +422,13 @@ public class Racko {
                     try {
                         TimeUnit.SECONDS.sleep(2);
                     }
-                    catch(Exception e) {}
+                    catch(Exception ignored) {}
                     turnOption = String.valueOf(botPlayerOptions.getDrawnOption());
+                    botPlayerOptions = new PlayerOptions(playerOpts.getTurnOption(), botPlayerOptions.getDrawnOption());
                 }
                 else {
                     turnOption = reader.readLine();
-                    return new PlayerOptions(playerOpts.getTurnOption(), Integer.valueOf(turnOption));
+                    return new PlayerOptions(playerOpts.getTurnOption(), Integer.parseInt(turnOption));
                 }
             }
         }
@@ -469,6 +472,80 @@ public class Racko {
 
     public ArrayList<RackoPlayer> getThePlayers() {
         return thePlayers;
+    }
+
+    /**
+     * Starts a game if it's the first game, otherwise it asks to end the game or continue. If continue it resets the
+     * round.
+     */
+    public void setupGame() {
+        if(endRound) {
+            requestEndGame();
+            if(endGame && endRound){
+                updateWinnerForEndGame();
+                printEndGameScreen();
+                return;
+            }
+            resetRound();
+        }
+        else {
+            start();
+        }
+    }
+
+    /**
+     * Sets theWinner to the player with the highest score.
+     */
+    private void updateWinnerForEndGame() {
+        RackoPlayer theRealWinner = null;
+
+        for(RackoPlayer aPlayer : thePlayers) {
+            if(theRealWinner == null || aPlayer.getScore() > theRealWinner.getScore())
+                theRealWinner = aPlayer;
+        }
+
+        theWinner = theRealWinner;
+    }
+
+    private void requestEndGame() {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Would you like to continue the game?");
+        try {
+            String option = "";
+            while (!option.equals("C") && !option.equals("Q")) {
+                System.out.print("[C]ontinue [Q]uit: ");
+                if(isAllBots()){
+                    option = "C";
+                    System.out.println(option);
+                }
+                else {
+                    option = reader.readLine();
+                    option = option.toUpperCase();
+                }
+            }
+
+            if(option.equals("Q")) {
+                endGame = true;
+                endRound = true;
+            }
+        }
+        catch (IOException e) {
+            System.out.println();
+            System.out.println("ERROR: Wrong input, try again.");
+            requestEndGame();
+        }
+    }
+
+    /**
+     * @return TRUE if all players are bots.
+     */
+    private boolean isAllBots() {
+        boolean allBots = true;
+        for(RackoPlayer aPlayer : thePlayers) {
+            if(!aPlayer.isBot())
+                allBots = false;
+        }
+        return allBots;
     }
 
     /**
