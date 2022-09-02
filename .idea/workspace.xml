@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8b2eb836-de5c-481f-9e64-b79e8d56107f" name="Changes" comment="Updated end round scenario and resetting the round.">
+    <list default="true" id="8b2eb836-de5c-481f-9e64-b79e8d56107f" name="Changes" comment="Updated resetting of game, including players and starts a new game.&#10;Updated documentation.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/com/sergioajara/racko/Racko.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/sergioajara/racko/Racko.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/com/sergioajara/racko/RackoGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/sergioajara/racko/RackoGame.java" afterDir="false" />
@@ -51,7 +51,9 @@
       <workItem from="1661540724823" duration="17657000" />
       <workItem from="1661616985095" duration="141000" />
       <workItem from="1661617599118" duration="13124000" />
-      <workItem from="1661694752071" duration="19144000" />
+      <workItem from="1661694752071" duration="26565000" />
+      <workItem from="1662034644515" duration="5416000" />
+      <workItem from="1662132204132" duration="1294000" />
     </task>
     <task id="LOCAL-00001" summary="Updated end round scenario and resetting the round.">
       <created>1661581166041</created>
@@ -60,7 +62,14 @@
       <option name="project" value="LOCAL" />
       <updated>1661581166041</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Updated game ending and resetting of cards when deck is empty. Added ability to end game after round is done. If it's all bots playing it will continue automatically.">
+      <created>1661903252086</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1661903252086</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -80,7 +89,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Updated end round scenario and resetting the round." />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated end round scenario and resetting the round." />
+    <MESSAGE value="Updated game ending and resetting of cards when deck is empty. Added ability to end game after round is done. If it's all bots playing it will continue automatically." />
+    <MESSAGE value="Updated resetting of game, including players and starts a new game.&#10;Updated documentation." />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated resetting of game, including players and starts a new game.&#10;Updated documentation." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

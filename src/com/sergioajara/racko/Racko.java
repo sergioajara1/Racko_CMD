@@ -133,11 +133,8 @@ public class Racko {
                 currPlayer = thePlayers.get(dealerIndex);
                 System.out.println("================================================================================");
                 System.out.println(currPlayer.getName() + "'s Turn");
-                System.out.println(currPlayer.toString());
-                try {
-                    TimeUnit.SECONDS.sleep(2);
-                }
-                catch(Exception ignored) {}
+                System.out.println(currPlayer);
+                TimeUnit.SECONDS.sleep(2);
 
                 if(checkForRacko(currPlayer))
                     endRound(currPlayer);
@@ -152,10 +149,12 @@ public class Racko {
                 
                 if(currPlayer == theDealer)
                     dealerIndex = thePlayers.indexOf(theDealer);
-            } catch (IndexOutOfBoundsException e) {
+            }
+            catch (IndexOutOfBoundsException e) {
                     //Put at negative, so it zeros out on the next loop.
                     dealerIndex = -1;
             }
+            catch(Exception ignored) {}
         }
         if(endRound) {
             scorePlayers();
@@ -406,6 +405,15 @@ public class Racko {
         return botPlayerOptions;
     }
 
+
+    /**
+     * Gets the next play after drawing a card.
+     * @param reader The reader for input
+     * @param thePlayer The current player
+     * @param drawnCard The card that was drawn
+     * @param playerOpts The play that was made before this move.
+     * @return The PlayerOptions for the next play
+     */
     private PlayerOptions getDrawOption(BufferedReader reader, RackoPlayer thePlayer, RackoCard drawnCard, PlayerOptions playerOpts) {
         PlayerOptions botPlayerOptions = null;
         String turnOption = "0";
@@ -507,6 +515,10 @@ public class Racko {
         theWinner = theRealWinner;
     }
 
+    /**
+     * Asks the player if they would like to continue the game after a round. Will automatically continue if all players
+     * are bots.
+     */
     private void requestEndGame() {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Would you like to continue the game?");
@@ -542,8 +554,10 @@ public class Racko {
     private boolean isAllBots() {
         boolean allBots = true;
         for(RackoPlayer aPlayer : thePlayers) {
-            if(!aPlayer.isBot())
+            if (!aPlayer.isBot()) {
                 allBots = false;
+                break;
+            }
         }
         return allBots;
     }
